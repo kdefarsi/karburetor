@@ -1,0 +1,27 @@
+[project]
+name = "karburetor"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "KDE Farsi Community" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "pycountry>=26.2.16",
+    "pysocks>=1.7.1",
+    "socks>=0",
+    "stem>=1.8.2",
+]
+
+# PySide6 and KStatusNotifierItem are intentionally NOT listed here: they must
+# come from the distribution's own packages so that both import from a single
+# site-packages tree. Mixing a venv-local PySide6 with the system-built
+# KStatusNotifierItem loads two different libshiboken6 copies and segfaults.
+
+[project.scripts]
+karburetor = "karburetor:main"
+
+[build-system]
+requires = ["uv_build>=0.12.1,<0.13.0"]
+build-backend = "uv_build"
