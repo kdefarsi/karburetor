@@ -38,6 +38,7 @@ class Settings(QObject):
     fascistFirewallChanged = Signal()
     hiddenServicesChanged = Signal()
     autoSetChanged = Signal()
+    firstRunChanged = Signal()
     socksPortChanged = Signal()
     dnsPortChanged = Signal()
     httpPortChanged = Signal()
@@ -244,6 +245,7 @@ class Settings(QObject):
         if not parsed.get("transport"):
             return False
         return line in tconfig.get_bridges(parsed["transport"])
+
     @Slot(result="QVariantList")
     def refreshBridges(self):
         """
@@ -312,7 +314,7 @@ class Settings(QObject):
         tconfig.remove_hidden_port(name)
         self.hiddenServicesChanged.emit()
 
-    @Property(bool, notify=autoSetChanged)
+    @Property(bool, notify=firstRunChanged)
     def firstRun(self) -> bool:
         """
         Whether the user has not yet completed the first-run introduction.
@@ -328,4 +330,4 @@ class Settings(QObject):
             parser.add_section("General")
         parser.set("General", "FirstRun", "true" if value else "false")
         write_store(parser)
-        self.autoSetChanged.emit()
+        self.firstRunChanged.emit()

@@ -1,5 +1,10 @@
 # Karburetor
 
+<p align="center">
+  <img src="src/karburetor/icons/hicolor/scalable/apps/karburetor.svg"
+       alt="Karburetor icon" width="128" height="128"/>
+</p>
+
 Karburetor is a Tor client for the KDE Plasma desktop. It is a port of
 Carburetor to the KDE stack. The tractor CLI backend from Carburetor is kept
 intact and wrapped in a PySide6 and Kirigami user interface with a Plasma

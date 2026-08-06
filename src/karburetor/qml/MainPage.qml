@@ -7,7 +7,13 @@ import org.kde.ki18n
 Kirigami.Page {
     id: page
 
-    title: "Karburetor"
+    title: i18n("Karburetor")
+
+    // Suppress the default page padding so we can center the content ourselves
+    topPadding: 0
+    bottomPadding: 0
+    leftPadding: 0
+    rightPadding: 0
 
     ColumnLayout {
         anchors.centerIn: parent
@@ -17,32 +23,31 @@ Kirigami.Page {
         Item {
             id: iconHolder
             Layout.alignment: Qt.AlignHCenter
-            Layout.preferredWidth: 140
-            Layout.preferredHeight: 140
+            Layout.preferredWidth: 128
+            Layout.preferredHeight: 128
 
             Kirigami.Icon {
                 anchors.fill: parent
-                source: controller.state === "running" ? "security-high-symbolic"
+                source: controller.state === "running" ? "karburetor"
                       : controller.state === "dead" ? "network-offline"
-                      : "security-low-symbolic"
+                      : "karburetor-symbolic"
                 selected: false
             }
 
             Controls.BusyIndicator {
                 anchors.centerIn: parent
-                width: 132
-                height: 132
+                width: 120
+                height: 120
                 running: controller.state === "connecting"
                 visible: running
             }
         }
 
-        Controls.Label {
+        Kirigami.Heading {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             text: controller.title
-            font.pixelSize: 30
-            font.weight: Font.Bold
+            level: 2
             color: controller.state === "running"
                 ? Kirigami.Theme.positiveTextColor
                 : controller.state === "dead"
@@ -68,8 +73,9 @@ Kirigami.Page {
 
         Controls.Button {
             Layout.fillWidth: true
-            Layout.preferredHeight: 48
+            Layout.preferredHeight: Kirigami.Units.gridUnit * 3
             Layout.topMargin: Kirigami.Units.largeSpacing
+            highlighted: true
             text: controller.state === "running" ? i18n("Stop")
                 : controller.state === "connecting" ? i18n("Cancel")
                 : i18n("Start")
@@ -86,6 +92,7 @@ Kirigami.Page {
             Layout.fillWidth: true
             text: i18n("New Identity")
             visible: controller.state === "running"
+            icon.name: "contact-new"
             onClicked: controller.newId()
         }
 
@@ -93,6 +100,7 @@ Kirigami.Page {
             Layout.fillWidth: true
             text: i18n("Check Connection")
             visible: controller.state === "running"
+            icon.name: "network-connect"
             onClicked: controller.checkConnection()
         }
     }

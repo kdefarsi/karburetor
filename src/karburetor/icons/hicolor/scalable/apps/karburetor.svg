@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none"
+     xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <!-- Base lighting -->
+    <linearGradient id="baseGradient" x1="256" y1="64" x2="256" y2="448"
+                    gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7FC8FF"/>
+      <stop offset="1" stop-color="#2878C8"/>
+    </linearGradient>
+
+    <linearGradient id="shellGradient" x1="256" y1="130" x2="256" y2="390"
+                    gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4B7FF"/>
+      <stop offset="0.45" stop-color="#C35BFF"/>
+      <stop offset="1" stop-color="#6A21B8"/>
+    </linearGradient>
+
+    <linearGradient id="coreGradient" x1="256" y1="190" x2="256" y2="330"
+                    gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD86B"/>
+      <stop offset="1" stop-color="#F39C12"/>
+    </linearGradient>
+
+    <!-- Foreground shadow -->
+    <filter id="softShadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+  </defs>
+
+  <!-- Base shadow -->
+  <path d="M256 48C141 48 48 141 48 256C48 371 141 464 256 464C371 464 464 371 464 256C464 141 371 48 256 48Z"
+        fill="#000000"
+        opacity="0.12"/>
+
+  <!-- Base -->
+  <path d="M256 40C141 40 40 141 40 256C40 371 141 472 256 472C371 472 472 371 472 256C472 141 371 40 256 40Z"
+        fill="url(#baseGradient)"
+        stroke="#000000"
+        stroke-opacity="0.1"/>
+
+
+  <!-- Foreground 45 degree shadow -->
+  <g opacity="0.18" filter="url(#softShadow)">
+    <path d="M256 124C185 124 128 181 128 252C128 323 185 380 256 380C327 380 384 323 384 252C384 181 327 124 256 124Z"
+          transform="translate(18 18)"
+          fill="#000000"/>
+  </g>
+
+
+  <!-- Onion privacy shell -->
+  <path d="M256 118
+           C177 118 120 178 120 252
+           C120 326 177 394 256 394
+           C335 394 392 326 392 252
+           C392 178 335 118 256 118Z"
+        fill="url(#shellGradient)"/>
+
+
+  <!-- Onion layers -->
+  <path d="M256 156
+           C205 156 164 197 164 252
+           C164 307 205 350 256 350
+           C307 350 348 307 348 252
+           C348 197 307 156 256 156Z"
+        fill="#FFFFFF"
+        opacity="0.18"/>
+
+
+  <path d="M256 188
+           C221 188 192 216 192 252
+           C192 288 221 316 256 316
+           C291 316 320 288 320 252
+           C320 216 291 188 256 188Z"
+        fill="url(#coreGradient)"/>
+
+
+  <!-- Network nodes -->
+  <circle cx="256" cy="220" r="10" fill="#FFFFFF"/>
+  <circle cx="216" cy="276" r="10" fill="#FFFFFF"/>
+  <circle cx="296" cy="276" r="10" fill="#FFFFFF"/>
+
+  <path d="M256 220L216 276M256 220L296 276M216 276H296"
+        stroke="#FFFFFF"
+        stroke-width="7"
+        stroke-linecap="round"
+        opacity="0.9"/>
+
+
+  <!-- Hard bottom shadow -->
+  <path d="M256 472C371 472 464 379 464 256"
+        stroke="#000000"
+        stroke-opacity="0.1"
+        stroke-width="2"/>
+
+</svg>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- karburetor-symbolic: monochrome tray icon (stopped/idle state) -->
+<svg width="22" height="22" viewBox="0 0 22 22" fill="none"
+     xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer ring -->
+  <circle cx="11" cy="11" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/>
+  <!-- Middle ring -->
+  <circle cx="11" cy="11" r="5.5" stroke="currentColor" stroke-width="1.2" fill="none" opacity="0.6"/>
+  <!-- Network node top -->
+  <circle cx="11" cy="6.5" r="1.2" fill="currentColor"/>
+  <!-- Network node bottom-left -->
+  <circle cx="7.5" cy="14" r="1.2" fill="currentColor"/>
+  <!-- Network node bottom-right -->
+  <circle cx="14.5" cy="14" r="1.2" fill="currentColor"/>
+  <!-- Edges -->
+  <line x1="11" y1="6.5" x2="7.5" y2="14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="11" y1="6.5" x2="14.5" y2="14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="7.5" y1="14" x2="14.5" y2="14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+</svg>

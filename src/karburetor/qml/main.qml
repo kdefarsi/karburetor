@@ -13,12 +13,15 @@ Kirigami.ApplicationWindow {
     minimumWidth: 320
     minimumHeight: 440
 
+    title: "Karburetor"
+
     pageStack.initialPage: MainPage {}
 
     globalDrawer: Kirigami.GlobalDrawer {
         id: drawer
         objectName: "drawer"
-        title: "Karburetor"
+        title: i18n("Karburetor")
+        titleIcon: "karburetor"
 
         actions: [
             Kirigami.Action {
@@ -91,37 +94,49 @@ Kirigami.ApplicationWindow {
     }
 
     // First-run introduction
-    Kirigami.OverlaySheet {
+    Kirigami.Dialog {
         id: firstRunSheet
         objectName: "firstRunSheet"
-        property bool dismissed: false
+
+        title: i18n("Welcome to Karburetor")
+        standardButtons: Kirigami.Dialog.NoButton
+        closePolicy: Controls.Popup.NoAutoClose
+
+        padding: Kirigami.Units.largeSpacing * 2
 
         ColumnLayout {
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 18
             spacing: Kirigami.Units.largeSpacing
+            implicitWidth: Kirigami.Units.gridUnit * 20
 
-            Kirigami.Heading {
-                text: i18n("Welcome to Karburetor")
-                level: 1
+            Kirigami.Icon {
+                Layout.alignment: Qt.AlignHCenter
+                source: "karburetor"
+                implicitWidth: Kirigami.Units.iconSizes.huge
+                implicitHeight: Kirigami.Units.iconSizes.huge
             }
+
             Controls.Label {
+                Layout.fillWidth: true
                 text: i18n(
                     "Karburetor lets you browse privately by routing your " +
                     "traffic through the Tor network. When you are connected, " +
                     "set the system proxy or use the local ports directly."
                 )
                 wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
             }
-            Controls.Button {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 44
+        }
+
+        customFooterActions: [
+            Kirigami.Action {
                 text: i18n("Get Started")
-                onClicked: {
+                icon.name: "go-next"
+                onTriggered: {
                     settings.firstRun = false
                     firstRunSheet.close()
                 }
             }
-        }
+        ]
 
         Component.onCompleted: {
             if (settings.firstRun) {

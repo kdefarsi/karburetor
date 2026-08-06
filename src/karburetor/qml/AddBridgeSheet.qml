@@ -5,10 +5,12 @@ import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.formcard 1.0 as FormCard
 import org.kde.ki18n
 
-Kirigami.OverlaySheet {
+Kirigami.Dialog {
     id: sheet
 
-    title: i18n("Add New Bridges")
+    title: i18n("Add New Bridge")
+
+    standardButtons: Kirigami.Dialog.NoButton
 
     property bool valid: false
 
@@ -37,8 +39,10 @@ Kirigami.OverlaySheet {
         sheet.close()
     }
 
+    padding: Kirigami.Units.largeSpacing
+
     ColumnLayout {
-        Layout.preferredWidth: 480
+        implicitWidth: Math.min(Kirigami.Units.gridUnit * 30, parent?.width ?? Kirigami.Units.gridUnit * 30)
         spacing: Kirigami.Units.largeSpacing
 
         Controls.Label {
@@ -59,7 +63,7 @@ Kirigami.OverlaySheet {
                 id: bridgeField
                 label: i18n("Paste your bridge address here")
                 onTextChanged: sheet.checkEntry()
-                onAccepted: sheet.apply()
+                onAccepted: if (sheet.valid) sheet.apply()
             }
         }
 
@@ -70,24 +74,14 @@ Kirigami.OverlaySheet {
             color: Kirigami.Theme.negativeTextColor
             visible: text.length > 0
         }
-
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Kirigami.Units.smallSpacing
-
-            Item {
-                Layout.fillWidth: true
-            }
-            Controls.Button {
-                text: i18n("Cancel")
-                onClicked: sheet.close()
-            }
-            Controls.Button {
-                text: i18n("Add")
-                enabled: sheet.valid
-                highlighted: true
-                onClicked: sheet.apply()
-            }
-        }
     }
+
+    customFooterActions: [
+        Kirigami.Action {
+            text: i18n("Add")
+            icon.name: "list-add"
+            enabled: sheet.valid
+            onTriggered: sheet.apply()
+        }
+    ]
 }

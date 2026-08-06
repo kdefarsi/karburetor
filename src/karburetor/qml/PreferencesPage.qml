@@ -5,7 +5,7 @@ import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.formcard 1.0 as FormCard
 import org.kde.ki18n
 
-Kirigami.ScrollablePage {
+FormCard.FormCardPage {
     id: page
     objectName: "preferencesPage"
 
@@ -13,11 +13,6 @@ Kirigami.ScrollablePage {
 
     property var addBridgeSheet: null
     property var addHiddenServiceSheet: null
-
-    leftPadding: 0
-    rightPadding: 0
-    topPadding: Kirigami.Units.smallSpacing
-    bottomPadding: Kirigami.Units.largeSpacing
 
     function comboModel() {
         return settings.countryModel.concat([{
@@ -62,11 +57,12 @@ Kirigami.ScrollablePage {
                 }
             }
         }
+        FormCard.FormDelegateSeparator { visible: manualCode.visible }
         FormCard.FormTextFieldDelegate {
             id: manualCode
             visible: false
             label: i18n("Country Code")
-            description: i18n("ISO-3166 alpha-2 code, e.g. “us”")
+            description: i18n('ISO-3166 alpha-2 code, e.g. "us"')
             onAccepted: {
                 if (text.trim().length > 0) {
                     settings.exitNode = text.trim()
@@ -80,18 +76,23 @@ Kirigami.ScrollablePage {
     }
     FormCard.FormCard {
         FormCard.FormSwitchDelegate {
+            id: acceptConnectionDelegate
             text: i18n("Accept Incoming Connections")
             description: i18n("Allow external devices to use this network")
             checked: settings.acceptConnection
             onToggled: settings.acceptConnection = checked
         }
+        FormCard.FormDelegateSeparator { below: acceptConnectionDelegate; above: fascistFirewallDelegate }
         FormCard.FormSwitchDelegate {
+            id: fascistFirewallDelegate
             text: i18n("Fascist Firewall Mode")
             description: i18n("Restrict connections to ports 80 and 443")
             checked: settings.fascistFirewall
             onToggled: settings.fascistFirewall = checked
         }
+        FormCard.FormDelegateSeparator { below: fascistFirewallDelegate; above: autoSetDelegate }
         FormCard.FormSwitchDelegate {
+            id: autoSetDelegate
             text: i18n("Set Proxy Automatically")
             description: i18n(
                 "Configure the KDE system proxy after a successful connection"
@@ -106,6 +107,7 @@ Kirigami.ScrollablePage {
     }
     FormCard.FormCard {
         FormCard.FormSpinBoxDelegate {
+            id: socksPortDelegate
             label: i18n("SOCKS")
             description: i18n("Main connection point for secure communication")
             from: 1
@@ -114,7 +116,9 @@ Kirigami.ScrollablePage {
             value: settings.socksPort
             onValueModified: settings.socksPort = value
         }
+        FormCard.FormDelegateSeparator { below: socksPortDelegate; above: dnsPortDelegate }
         FormCard.FormSpinBoxDelegate {
+            id: dnsPortDelegate
             label: i18n("DNS")
             description: i18n("A local DNS server for enhanced privacy")
             from: 1
@@ -123,7 +127,9 @@ Kirigami.ScrollablePage {
             value: settings.dnsPort
             onValueModified: settings.dnsPort = value
         }
+        FormCard.FormDelegateSeparator { below: dnsPortDelegate; above: httpPortDelegate }
         FormCard.FormSpinBoxDelegate {
+            id: httpPortDelegate
             label: i18n("HTTP")
             description: i18n("A fallback HTTP tunnel for simple connections")
             from: 1
@@ -139,14 +145,17 @@ Kirigami.ScrollablePage {
     }
     FormCard.FormCard {
         FormCard.FormSwitchDelegate {
+            id: hiddenServicesSwitch
             text: i18n("Enable Hidden Services")
             description: i18n("Create an onion address when Karburetor connects")
             checked: settings.hiddenServices
             onToggled: settings.hiddenServices = checked
         }
+        FormCard.FormDelegateSeparator {}
         Repeater {
             model: settings.hiddenServicesModel
             delegate: FormCard.AbstractFormDelegate {
+                required property var modelData
                 contentItem: RowLayout {
                     spacing: Kirigami.Units.smallSpacing
 
@@ -173,11 +182,6 @@ Kirigami.ScrollablePage {
         }
         FormCard.AbstractFormDelegate {
             visible: settings.hiddenServicesModel.length === 0
-            onClicked: {
-                if (page.addHiddenServiceSheet) {
-                    page.addHiddenServiceSheet.open()
-                }
-            }
             contentItem: RowLayout {
                 spacing: Kirigami.Units.smallSpacing
 
@@ -188,8 +192,10 @@ Kirigami.ScrollablePage {
                 }
             }
         }
+        FormCard.FormDelegateSeparator {}
         FormCard.FormButtonDelegate {
             text: i18n("Add Hidden Service")
+            icon.name: "list-add"
             onClicked: {
                 if (page.addHiddenServiceSheet) {
                     page.addHiddenServiceSheet.open()
@@ -199,7 +205,7 @@ Kirigami.ScrollablePage {
     }
 
     FormCard.FormHeader {
-        title: i18n("Bridges")
+        title: i18n("Pluggable Transports")
     }
     FormCard.FormCard {
         FormCard.FormComboBoxDelegate {
@@ -222,6 +228,7 @@ Kirigami.ScrollablePage {
                 settings.bridgeType = bridgeTypeCombo.currentValue
             }
         }
+        FormCard.FormDelegateSeparator {}
         FormCard.FormButtonDelegate {
             text: i18n("Transport Executable File")
             description: settings.pluginEnabled
@@ -239,6 +246,7 @@ Kirigami.ScrollablePage {
         Repeater {
             model: settings.bridgesModel
             delegate: FormCard.AbstractFormDelegate {
+                required property var modelData
                 contentItem: RowLayout {
                     spacing: Kirigami.Units.smallSpacing
 
@@ -277,8 +285,10 @@ Kirigami.ScrollablePage {
                 }
             }
         }
+        FormCard.FormDelegateSeparator {}
         FormCard.FormButtonDelegate {
             text: i18n("Add Bridge")
+            icon.name: "list-add"
             onClicked: {
                 if (page.addBridgeSheet) {
                     page.addBridgeSheet.open()
@@ -292,23 +302,34 @@ Kirigami.ScrollablePage {
     }
     FormCard.FormCard {
         FormCard.FormButtonDelegate {
+            id: bridgeDbDelegate
             text: i18n("BridgeDB Website")
             description: i18n("Visit the BridgeDB website")
+            icon.name: "internet-services"
             onClicked: Qt.openUrlExternally("https://bridges.torproject.org/options")
         }
+        FormCard.FormDelegateSeparator { below: bridgeDbDelegate; above: emailDelegate }
         FormCard.FormButtonDelegate {
+            id: emailDelegate
             text: i18n("Email")
             description: i18n("Exclusively from Gmail or Riseup")
+            icon.name: "mail-message"
             onClicked: Qt.openUrlExternally("mailto:bridges@torproject.org?body=get%20bridges")
         }
+        FormCard.FormDelegateSeparator { below: emailDelegate; above: telegramDelegate }
         FormCard.FormButtonDelegate {
+            id: telegramDelegate
             text: i18n("Telegram")
             description: i18n("Message GetBridgesBot")
+            icon.name: "dialog-messages"
             onClicked: Qt.openUrlExternally("tg://resolve?domain=GetBridgesBot")
         }
+        FormCard.FormDelegateSeparator { below: telegramDelegate; above: openFileDelegate }
         FormCard.FormButtonDelegate {
+            id: openFileDelegate
             text: i18n("Open Bridges File Externally")
             description: i18n("View as a text file to edit and share bridges")
+            icon.name: "document-open"
             onClicked: Qt.openUrlExternally("file://" + settings.bridgesFilePath())
         }
     }

@@ -4,11 +4,16 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.ki18n
 
-Kirigami.OverlaySheet {
+Kirigami.Dialog {
     id: sheet
 
     title: i18n("Logs")
     property int lineCount: 0
+
+    standardButtons: Kirigami.Dialog.NoButton
+
+    preferredWidth: Kirigami.Units.gridUnit * 38
+    preferredHeight: Kirigami.Units.gridUnit * 28
 
     function onLogLine(line) {
         lineCount++
@@ -28,13 +33,12 @@ Kirigami.OverlaySheet {
     }
 
     ColumnLayout {
-        Layout.preferredWidth: 560
-        Layout.preferredHeight: 420
+        anchors.fill: parent
         spacing: 0
 
         RowLayout {
             Layout.fillWidth: true
-            Layout.bottomMargin: Kirigami.Units.smallSpacing
+            Layout.margins: Kirigami.Units.smallSpacing
             spacing: Kirigami.Units.smallSpacing
 
             Controls.Label {
@@ -45,11 +49,13 @@ Kirigami.OverlaySheet {
             Controls.ToolButton {
                 icon.name: "edit-clear-all"
                 text: i18n("Clear")
+                display: Controls.AbstractButton.TextBesideIcon
                 onClicked: sheet.clearLogs()
             }
             Controls.ToolButton {
                 icon.name: "edit-copy"
                 text: i18n("Copy")
+                display: Controls.AbstractButton.TextBesideIcon
                 onClicked: sheet.copyLogs()
             }
         }

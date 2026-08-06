@@ -5,10 +5,12 @@ import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.formcard 1.0 as FormCard
 import org.kde.ki18n
 
-Kirigami.OverlaySheet {
+Kirigami.Dialog {
     id: sheet
 
     title: i18n("Add Hidden Service")
+
+    standardButtons: Kirigami.Dialog.NoButton
 
     property bool valid: false
 
@@ -32,8 +34,10 @@ Kirigami.OverlaySheet {
         sheet.close()
     }
 
+    padding: Kirigami.Units.largeSpacing
+
     ColumnLayout {
-        Layout.preferredWidth: 480
+        implicitWidth: Math.min(Kirigami.Units.gridUnit * 30, parent?.width ?? Kirigami.Units.gridUnit * 30)
         spacing: Kirigami.Units.largeSpacing
 
         FormCard.FormCard {
@@ -44,6 +48,7 @@ Kirigami.OverlaySheet {
                 label: i18n("Name")
                 onTextChanged: sheet.checkEntry()
             }
+            FormCard.FormDelegateSeparator {}
             FormCard.FormSpinBoxDelegate {
                 id: portSpin
                 label: i18n("Onion Port")
@@ -52,12 +57,14 @@ Kirigami.OverlaySheet {
                 to: 65535
                 value: 80
             }
+            FormCard.FormDelegateSeparator {}
             FormCard.FormTextFieldDelegate {
                 id: hostField
                 label: i18n("Target Host")
                 text: "127.0.0.1"
                 onTextChanged: sheet.checkEntry()
             }
+            FormCard.FormDelegateSeparator {}
             FormCard.FormSpinBoxDelegate {
                 id: targetSpin
                 label: i18n("Target Port")
@@ -75,24 +82,14 @@ Kirigami.OverlaySheet {
             color: Kirigami.Theme.negativeTextColor
             visible: text.length > 0
         }
-
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Kirigami.Units.smallSpacing
-
-            Item {
-                Layout.fillWidth: true
-            }
-            Controls.Button {
-                text: i18n("Cancel")
-                onClicked: sheet.close()
-            }
-            Controls.Button {
-                text: i18n("Add")
-                enabled: sheet.valid
-                highlighted: true
-                onClicked: sheet.apply()
-            }
-        }
     }
+
+    customFooterActions: [
+        Kirigami.Action {
+            text: i18n("Add")
+            icon.name: "list-add"
+            enabled: sheet.valid
+            onTriggered: sheet.apply()
+        }
+    ]
 }

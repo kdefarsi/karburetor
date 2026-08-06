@@ -1,3 +1,4 @@
+import QtQuick
 import org.kde.kirigami as Kirigami
 
 Kirigami.AboutPage {
@@ -9,7 +10,7 @@ Kirigami.AboutPage {
         "shortDescription": "A KDE Tor client",
         "homepage": "https://github.com/kdefarsi/karburetor",
         "bugAddress": "https://github.com/kdefarsi/karburetor/issues",
-        "version": Qt.applicationVersion,
+        "version": Qt.application.version,
         "otherText": "",
         "authors": [
             {

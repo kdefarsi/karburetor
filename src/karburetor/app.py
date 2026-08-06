@@ -15,6 +15,7 @@ import os
 import sys
 
 from PySide6.QtCore import QCoreApplication, QUrl
+from PySide6.QtGui import QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtWidgets import QApplication
 
@@ -31,6 +32,31 @@ def _version() -> str:
         return version("karburetor")
     except PackageNotFoundError:
         return "0.1.0"
+
+
+def _setup_icons() -> None:
+    """
+    Register the bundled icon tree so QIcon.fromTheme("karburetor") resolves
+    to our SVG and KStatusNotifierItem can find karburetor-symbolic.
+
+    We prepend our hicolor directory to the theme search path, then set the
+    application window icon directly from the bundled SVG so it works even
+    before any window is shown.
+    """
+    icons_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
+    if os.path.isdir(icons_dir):
+        # Prepend so our icons take priority over installed ones
+        paths = [icons_dir] + QIcon.themeSearchPaths()
+        QIcon.setThemeSearchPaths(paths)
+
+    # Set the application window icon from the bundled SVG
+    svg_path = os.path.join(
+        icons_dir, "hicolor", "scalable", "apps", "karburetor.svg"
+    )
+    if os.path.isfile(svg_path):
+        QApplication.setWindowIcon(QIcon(svg_path))
+    else:
+        QApplication.setWindowIcon(QIcon.fromTheme("karburetor"))
 
 
 def _init_ki18n(engine) -> bool:
@@ -81,6 +107,9 @@ def main() -> int:
     app.setApplicationVersion(_version())
     # Keep running in the system tray after the window closes
     app.setQuitOnLastWindowClosed(False)
+
+    # Register bundled icons and set window icon BEFORE creating the engine
+    _setup_icons()
 
     engine = QQmlApplicationEngine()
     for import_path in ("/usr/lib/qt6/qml", "/usr/lib64/qt6/qml"):
