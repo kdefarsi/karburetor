@@ -45,9 +45,9 @@ package() {
     cd "${pkgname}"
     python -m installer --destdir="${pkgdir}" dist/*.whl
 
-    if [ -f "data/org.kde.karburetor.desktop" ]; then
-        install -Dm644 "data/org.kde.karburetor.desktop" \
-            "${pkgdir}/usr/share/applications/org.kde.karburetor.desktop"
+    if [ -f "data/io.frama.tractor.karburetor.desktop" ]; then
+        install -Dm644 "data/io.frama.tractor.karburetor.desktop" \
+            "${pkgdir}/usr/share/applications/io.frama.tractor.karburetor.desktop"
     fi
 
     install -Dm644 \

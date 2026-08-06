@@ -39,6 +39,6 @@ Kirigami.AboutPage {
             }
         ],
         "copyrightStatement": "© 2026 KDE Farsi Community",
-        "desktopFileName": "org.kde.karburetor"
+        "desktopFileName": "io.frama.tractor.karburetor"
     }
 }

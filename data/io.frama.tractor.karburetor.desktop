@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Karburetor
+Comment=Browse anonymously
+Icon=karburetor
+Exec=karburetor
+Terminal=false
+Categories=Network;Security;Qt;KDE;
+Keywords=Tor;Tractor;Karburetor;
+StartupNotify=true
