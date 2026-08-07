@@ -97,8 +97,8 @@ FormCard.FormCardPage {
             description: i18n(
                 "Configure the KDE system proxy after a successful connection"
             )
-            checked: settings.autoSet
-            onToggled: settings.autoSet = checked
+            checked: controller.proxyEnabled
+            onToggled: controller.setProxy(checked)
         }
     }
 
@@ -161,19 +161,26 @@ FormCard.FormCardPage {
 
                     ColumnLayout {
                         Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        Layout.rightMargin: Kirigami.Units.smallSpacing
                         spacing: 0
 
                         Controls.Label {
+                            Layout.fillWidth: true
                             text: modelData.name
                             color: Kirigami.Theme.textColor
+                            elide: Text.ElideRight
                         }
                         Controls.Label {
+                            Layout.fillWidth: true
                             text: modelData.subtitle
                             color: Kirigami.Theme.disabledTextColor
                             elide: Text.ElideMiddle
                         }
                     }
                     Controls.ToolButton {
+                        Layout.minimumWidth: implicitWidth
+                        Layout.preferredWidth: implicitWidth
                         icon.name: "edit-delete"
                         onClicked: settings.removeHiddenService(modelData.name)
                     }
@@ -252,21 +259,28 @@ FormCard.FormCardPage {
 
                     ColumnLayout {
                         Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        Layout.rightMargin: Kirigami.Units.smallSpacing
                         spacing: 0
 
                         Controls.Label {
+                            Layout.fillWidth: true
                             text: modelData.connected.length > 0
                                 ? modelData.title + "  ✔ " + modelData.connected
                                 : modelData.title
                             color: Kirigami.Theme.textColor
+                            elide: Text.ElideRight
                         }
                         Controls.Label {
+                            Layout.fillWidth: true
                             text: modelData.subtitle
                             color: Kirigami.Theme.disabledTextColor
                             elide: Text.ElideMiddle
                         }
                     }
                     Controls.ToolButton {
+                        Layout.minimumWidth: implicitWidth
+                        Layout.preferredWidth: implicitWidth
                         icon.name: "edit-delete"
                         onClicked: settings.removeBridge(modelData.line)
                     }
