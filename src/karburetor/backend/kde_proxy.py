@@ -23,11 +23,16 @@ System Settings "Network Proxy" module), so it is fully KDE-compatible.
 * ``3`` WPAD (auto-detect)
 * ``4`` environment variables
 * ``5`` system (other)
+
+The settings are written through ``kwriteconfig6`` (falling back to
+``kwriteconfig5``) instead of editing the file directly, and after every
+change ``kded6`` is told to ``reconfigure`` so running KDE applications pick
+up the new proxy configuration immediately.
 """
 
 import os
-
-from configparser import ConfigParser
+import shutil
+import subprocess
 
 PROXY_CONFIG = os.path.join(
     os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")),
@@ -37,29 +42,114 @@ PROXY_CONFIG = os.path.join(
 _PROXY_GROUP = "Proxy Settings"
 
 
-def _read() -> ConfigParser:
-    """Read kioslaverc into a fresh parser."""
-    parser = ConfigParser(interpolation=None)
-    if os.path.isfile(PROXY_CONFIG):
-        try:
-            parser.read(PROXY_CONFIG, encoding="utf-8")
-        except OSError:
-            pass
-    if not parser.has_section(_PROXY_GROUP):
-        parser.add_section(_PROXY_GROUP)
-    return parser
+def _kwriteconfig() -> str:
+    """Return the path of the kwriteconfig binary, 6 preferred over 5."""
+    for name in ("kwriteconfig6", "kwriteconfig5"):
+        path = shutil.which(name)
+        if path:
+            return path
+    raise FileNotFoundError("kwriteconfig6 or kwriteconfig5 not found")
 
 
-def _write(parser: ConfigParser) -> None:
-    """Persist kioslaverc."""
-    os.makedirs(os.path.dirname(PROXY_CONFIG), exist_ok=True)
-    with open(PROXY_CONFIG, "w", encoding="utf-8") as file:
-        parser.write(file)
+def _kreadconfig() -> str:
+    """Return the path of the kreadconfig binary, 6 preferred over 5."""
+    for name in ("kreadconfig6", "kreadconfig5"):
+        path = shutil.which(name)
+        if path:
+            return path
+    raise FileNotFoundError("kreadconfig6 or kreadconfig5 not found")
 
 
-def _manual_host(parser: ConfigParser, key: str) -> tuple[str, int]:
+def _get(key: str) -> str:
+    """Return the value of a ``[Proxy Settings]`` key, or ``""``."""
+    result = subprocess.run(
+        [
+            _kreadconfig(),
+            "--file",
+            PROXY_CONFIG,
+            "--group",
+            _PROXY_GROUP,
+            "--key",
+            key,
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.stdout.strip()
+
+
+def _set(key: str, value: str) -> None:
+    """Write a ``[Proxy Settings]`` key through kwriteconfig."""
+    subprocess.run(
+        [
+            _kwriteconfig(),
+            "--file",
+            PROXY_CONFIG,
+            "--group",
+            _PROXY_GROUP,
+            "--key",
+            key,
+            value,
+        ],
+        check=False,
+    )
+
+
+def _delete(key: str) -> None:
+    """Remove a ``[Proxy Settings]`` key through kwriteconfig."""
+    subprocess.run(
+        [
+            _kwriteconfig(),
+            "--file",
+            PROXY_CONFIG,
+            "--group",
+            _PROXY_GROUP,
+            "--key",
+            key,
+            "--delete",
+        ],
+        check=False,
+    )
+
+
+def _reload() -> None:
+    """
+    Tell running KDE applications to reload their proxy configuration. Best
+    effort: no-op when no qdbus/dbus-send binary is available.
+
+    Two mechanisms are used:
+
+    * ``org.kde.kded6.reconfigure`` reloads kded modules so they re-read
+      ``kioslaverc``.
+    * The ``org.kde.KIO ProxySettingsChanged`` signal is what Plasma's own
+      System Settings proxy module emits after saving; KIO-based applications
+      listen for it and flush their cached proxy settings.
+    """
+    for name in ("qdbus6", "qdbus"):
+        path = shutil.which(name)
+        if path:
+            subprocess.run(
+                [path, "org.kde.kded6", "/kded", "org.kde.kded6.reconfigure"],
+                check=False,
+            )
+            break
+    path = shutil.which("dbus-send")
+    if path:
+        subprocess.run(
+            [
+                path,
+                "--session",
+                "--type=signal",
+                "/KIO",
+                "org.kde.KIO.ProxySettingsChanged",
+            ],
+            check=False,
+        )
+
+
+def _manual_host(value: str) -> tuple[str, int]:
     """Return ``(host, port)`` parsed from a ``scheme://host:port`` value."""
-    value = parser.get(_PROXY_GROUP, key, fallback="")
     if not value:
         return "", 0
     # strip scheme:// if present
@@ -75,10 +165,9 @@ def is_proxy_set(socks_host: str, socks_port: int) -> bool:
     Return True when kioslaverc is set to manual proxy pointing at our
     SOCKS listener.
     """
-    parser = _read()
-    if parser.get(_PROXY_GROUP, "ProxyType", fallback="0") != "1":
+    if _get("ProxyType") != "1":
         return False
-    host, port = _manual_host(parser, "socksProxy")
+    host, port = _manual_host(_get("socksProxy"))
     return host == socks_host and port == socks_port
 
 
@@ -88,15 +177,14 @@ def get_proxy() -> tuple[str, str, int]:
     ``(mode, host, port)`` where mode is ``"socks"``, ``"http"``, ``"https"``
     or ``"none"``.
     """
-    parser = _read()
-    if parser.get(_PROXY_GROUP, "ProxyType", fallback="0") != "1":
+    if _get("ProxyType") != "1":
         return "none", "", 0
     for key, mode in (
         ("socksProxy", "socks"),
         ("httpProxy", "http"),
         ("httpsProxy", "https"),
     ):
-        host, port = _manual_host(parser, key)
+        host, port = _manual_host(_get(key))
         if host and port:
             return mode, host, port
     return "none", "", 0
@@ -105,19 +193,18 @@ def get_proxy() -> tuple[str, str, int]:
 def proxy_set(socks_host: str, socks_port: int, ignore_hosts: list[str]) -> None:
     """
     Configure KDE's system proxy to route everything through the local
-    Tor SOCKS listener.
+    Tor SOCKS listener, then reload kded.
     """
-    parser = _read()
-    section = parser[_PROXY_GROUP]
-    section["ProxyType"] = "1"  # manual
-    section["httpProxy"] = f"http://{socks_host}:{socks_port}"
-    section["httpsProxy"] = f"http://{socks_host}:{socks_port}"
-    section["ftpProxy"] = f"http://{socks_host}:{socks_port}"
-    section["socksProxy"] = f"socks://{socks_host}:{socks_port}"
-    section["NoProxyFor"] = ",".join(ignore_hosts)
-    section["ProxyCgiScript"] = ""
-    section["ReversedException"] = "false"
-    _write(parser)
+    proxy = f"http://{socks_host}:{socks_port}"
+    _set("ProxyType", "1")  # manual
+    _set("httpProxy", proxy)
+    _set("httpsProxy", proxy)
+    _set("ftpProxy", proxy)
+    _set("socksProxy", f"socks://{socks_host}:{socks_port}")
+    _set("NoProxyFor", ",".join(ignore_hosts))
+    _set("ProxyCgiScript", "")
+    _set("ReversedException", "false")
+    _reload()
 
 
 def proxy_unset(mode: str, host: str, port: int) -> None:
@@ -128,20 +215,16 @@ def proxy_unset(mode: str, host: str, port: int) -> None:
         mode: Previous mode. ``"none"`` disables the proxy, otherwise a
             manual proxy with the given host/port is written back.
     """
-    parser = _read()
-    section = parser[_PROXY_GROUP]
     if mode == "none":
-        section["ProxyType"] = "0"  # no proxy
-        section.pop("httpProxy", None)
-        section.pop("httpsProxy", None)
-        section.pop("ftpProxy", None)
-        section.pop("socksProxy", None)
+        _set("ProxyType", "0")  # no proxy
+        for key in ("httpProxy", "httpsProxy", "ftpProxy", "socksProxy"):
+            _delete(key)
     else:
-        section["ProxyType"] = "1"
+        _set("ProxyType", "1")
         if mode == "socks":
-            section["socksProxy"] = f"socks://{host}:{port}"
+            _set("socksProxy", f"socks://{host}:{port}")
         elif mode == "http":
-            section["httpProxy"] = f"http://{host}:{port}"
+            _set("httpProxy", f"http://{host}:{port}")
         elif mode == "https":
-            section["httpsProxy"] = f"https://{host}:{port}"
-    _write(parser)
+            _set("httpsProxy", f"https://{host}:{port}")
+    _reload()
