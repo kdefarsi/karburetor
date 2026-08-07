@@ -7,7 +7,11 @@ import org.kde.ki18n
 Kirigami.Page {
     id: page
 
-    title: i18n("Karburetor")
+    // On desktop the app name already lives in the sidebar header, so don't
+    // repeat it in the toolbar; the hamburger-menu layout needs it though.
+    title: applicationWindow() && applicationWindow().wideMode
+        ? ""
+        : i18n("Karburetor")
 
     // Suppress the default page padding so we can center the content ourselves
     topPadding: 0
@@ -102,6 +106,32 @@ Kirigami.Page {
             visible: controller.state === "running"
             icon.name: "network-connect"
             onClicked: controller.checkConnection()
+        }
+
+        ColumnLayout {
+            visible: controller.state === "running"
+            Layout.fillWidth: true
+            Layout.topMargin: Kirigami.Units.largeSpacing
+            spacing: Kirigami.Units.smallSpacing
+
+            Controls.Label {
+                Layout.alignment: Qt.AlignHCenter
+                text: i18n("Local Ports")
+                color: Kirigami.Theme.disabledTextColor
+            }
+
+            Controls.Label {
+                Layout.alignment: Qt.AlignHCenter
+                text: i18n("SOCKS: %1", "127.0.0.1:" + controller.ports.socks)
+            }
+            Controls.Label {
+                Layout.alignment: Qt.AlignHCenter
+                text: i18n("DNS: %1", "127.0.0.1:" + controller.ports.dns)
+            }
+            Controls.Label {
+                Layout.alignment: Qt.AlignHCenter
+                text: i18n("HTTP: %1", "127.0.0.1:" + controller.ports.http)
+            }
         }
     }
 }
