@@ -1,13 +1,15 @@
 import QtQuick
-import org.kde.kirigami as Kirigami
+import org.kde.kirigamiaddons.formcard as FormCard
+import org.kde.ki18n
 
-Kirigami.AboutPage {
+FormCard.AboutPage {
     objectName: "aboutPage"
+
     aboutData: {
         "displayName": "Karburetor",
         "productName": "karburetor",
         "componentName": "karburetor",
-        "shortDescription": "A KDE Tor client",
+        "shortDescription": i18n("A KDE Tor client"),
         "homepage": "https://github.com/kdefarsi/karburetor",
         "bugAddress": "https://github.com/kdefarsi/karburetor/issues",
         "version": Qt.application.version,
@@ -15,7 +17,7 @@ Kirigami.AboutPage {
         "authors": [
             {
                 "name": "Sohrab Behdani",
-                "task": "",
+                "task": i18n("Maintainer"),
                 "emailAddress": "behdanisohrab@gmail.com",
                 "webAddress": "",
                 "ocsUsername": ""
@@ -24,7 +26,7 @@ Kirigami.AboutPage {
         "credits": [
             {
                 "name": "Danial Behzadi",
-                "task": "Original Carburetor/Tractor author",
+                "task": i18n("Original Carburetor/Tractor author"),
                 "emailAddress": "dani.behzi@ubuntu.com",
                 "webAddress": "https://gitlab.com/dbehzi/carburetor",
                 "ocsUsername": ""
