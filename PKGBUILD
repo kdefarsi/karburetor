@@ -6,7 +6,7 @@ pkgver=0.1
 pkgrel=1
 pkgdesc="A KDE Plasma Tor client — KDE port of Carburetor"
 arch=('x86_64')
-url="https://github.com/kdefarsi/karburetor"
+url="https://framagit.org/tractor/karburetor"
 license=('GPL-3.0-or-later')
 
 depends=(
@@ -33,7 +33,7 @@ makedepends=(
 provides=('karburetor')
 conflicts=('karburetor')
 
-source=("${pkgname}::git+https://github.com/kdefarsi/karburetor.git")
+source=("${pkgname}::git+https://framagit.org/tractor/karburetor.git")
 sha256sums=('SKIP')
 
 build() {
