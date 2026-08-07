@@ -26,8 +26,17 @@ Bugs fixed vs. original:
 
 import os
 
-from PySide6.QtGui import QIcon, QAction
-from PySide6.QtWidgets import QMenu
+from PySide6.QtCore import QRectF, Qt
+from PySide6.QtGui import (
+    QColor,
+    QIcon,
+    QPainter,
+    QPalette,
+    QPen,
+    QPixmap,
+    QAction,
+)
+from PySide6.QtWidgets import QApplication, QMenu
 import KStatusNotifierItem as KSNI
 
 
@@ -63,6 +72,8 @@ class Tray:
     }
     _DEFAULT_ICON = ("karburetor-symbolic", "Not connected")
 
+    _PROGRESS_ICON_SIZE = 22
+
     def __init__(self, window, controller):
         self._window = window
         self._controller = controller
@@ -74,6 +85,7 @@ class Tray:
         self._sni.setTitle("Karburetor")
         self._sni.setToolTipTitle("Karburetor")
         self._sni.setToolTipSubTitle("Not connected")
+        self._prev_state = "stopped"
 
         # CRITICAL: default status is Passive (hidden in Plasma).
         self._sni.setStatus(KSNI.KStatusNotifierItem.ItemStatus.Active)
@@ -108,9 +120,67 @@ class Tray:
 
         self._sni.activateRequested.connect(self._on_activate)
         controller.stateChanged.connect(self._on_state_changed)
+        controller.progressChanged.connect(self._on_progress_changed)
+        controller.proxyChanged.connect(self._on_proxy_changed)
 
         # Sync initial state
         self._on_state_changed(controller.state)
+
+    def _paint_progress_icon(self, progress: int) -> QIcon:
+        """
+        Draw the tray icon as a progress ring around the app symbol.
+        """
+        size = self._PROGRESS_ICON_SIZE
+        margin = 2.0
+        pixmap = QPixmap(size, size)
+        pixmap.fill(Qt.GlobalColor.transparent)
+
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        rect = QRectF(margin, margin, size - 2 * margin, size - 2 * margin)
+
+        accent = QApplication.palette().color(QPalette.ColorRole.Highlight)
+        if not accent.isValid():
+            accent = QColor(78, 154, 6)
+
+        # Background ring (track)
+        track = QPen(
+            QColor(accent.red(), accent.green(), accent.blue(), 70), 2
+        )
+        track.setCapStyle(Qt.PenCapStyle.RoundCap)
+        painter.setPen(track)
+        painter.drawEllipse(rect)
+
+        # Progress arc (clockwise from 12 o'clock)
+        if progress > 0:
+            arc = QPen(accent, 2)
+            arc.setCapStyle(Qt.PenCapStyle.RoundCap)
+            painter.setPen(arc)
+            painter.drawArc(rect, 90 * 16, -int(progress * 360 / 100) * 16)
+
+        # App symbol in the middle
+        icon = _load_icon("karburetor-symbolic")
+        if not icon.isNull():
+            inset = 5.0
+            icon.paint(
+                painter,
+                QRectF(inset, inset, size - 2 * inset, size - 2 * inset).toRect(),
+            )
+
+        painter.end()
+        return QIcon(pixmap)
+
+    def _on_progress_changed(self, progress: int) -> None:
+        """Redraw the progress ring while connecting."""
+        if self._controller.state != "connecting":
+            return
+        self._sni.setIconByPixmap(self._paint_progress_icon(progress))
+        self._sni.setToolTipSubTitle(f"Connecting… {progress}%")
+
+    def _on_proxy_changed(self, enabled: bool) -> None:
+        """Keep the tray's proxy checkbox in sync."""
+        self._proxy_action.setChecked(enabled)
 
     def _on_activate(self, _active: bool) -> None:
         self._window.show()
@@ -134,8 +204,14 @@ class Tray:
     def _on_state_changed(self, state: str) -> None:
         icon_name, tooltip = self._STATE_ICONS.get(state, self._DEFAULT_ICON)
 
+        if state == "connecting":
+            # Paint a progress ring while the connection is bootstrapping
+            icon = self._paint_progress_icon(self._controller.progress)
+            tooltip = f"Connecting… {self._controller.progress}%"
+        else:
+            icon = _load_icon(icon_name)
+
         # Update tray icon — setIconByPixmap() expects a QIcon (despite the name)
-        icon = _load_icon(icon_name)
         if not icon.isNull():
             self._sni.setIconByPixmap(icon)
         else:
@@ -154,3 +230,19 @@ class Tray:
         self._proxy_action.setChecked(self._controller.proxyEnabled)
         self._proxy_action.setEnabled(state == "running")
         self._new_id_action.setEnabled(state == "running")
+
+        # Desktop notification on connect/disconnect
+        previous = self._prev_state
+        self._prev_state = state
+        if state == "running" and previous != "running":
+            self._sni.showMessage(
+                "Karburetor",
+                "Connected to the Tor network",
+                "karburetor",
+            )
+        elif previous == "running" and state != "running":
+            self._sni.showMessage(
+                "Karburetor",
+                "Disconnected from the Tor network",
+                "karburetor",
+            )
