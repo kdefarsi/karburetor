@@ -46,6 +46,7 @@ class Controller(QObject):
     toast = Signal(str)
     proxyChanged = Signal(bool)
     checkResult = Signal(bool)
+    portsChanged = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -57,6 +58,11 @@ class Controller(QObject):
         self._reached_running = False
         self._cancelled = threading.Event()
         self._auto_set = db.get_val("auto-set")
+        self._ports = {
+            "socks": db.get_val("socks-port"),
+            "dns": db.get_val("dns-port"),
+            "http": db.get_val("http-port"),
+        }
         self._log_lock = threading.Lock()
 
     @Property(str, notify=stateChanged)
@@ -78,6 +84,32 @@ class Controller(QObject):
     @Property(bool, notify=proxyChanged)
     def proxyEnabled(self) -> bool:
         return self._auto_set
+
+    @Property("QVariant", notify=portsChanged)
+    def ports(self) -> dict:
+        """
+        Ports actually bound by the running tor, as a ``{socks, dns, http}``
+        map. Falls back to the configured values while not running.
+        """
+        return self._ports
+
+    def _refresh_ports(self) -> None:
+        """
+        Read the ports from the live control socket, falling back to the
+        configured values when tor is not reachable.
+        """
+        ports = {}
+        for key, listener in (
+            ("socks", "socks"),
+            ("dns", "dns"),
+            ("http", "http"),
+        ):
+            try:
+                ports[key] = control.get_listener(listener)[1]
+            except Exception:
+                ports[key] = db.get_val(f"{key}-port")
+        self._ports = ports
+        self.portsChanged.emit()
 
     def _set_state(self, state: str) -> None:
         if self._state == state:
@@ -145,6 +177,7 @@ class Controller(QObject):
         self._set_progress(0)
         self._set_title("Connecting…")
         self._set_description("Starting")
+        self._refresh_ports()
         self._set_state("connecting")
         try:
             proc = subprocess.Popen(
@@ -200,6 +233,7 @@ class Controller(QObject):
                 self._set_description(notice)
                 if percentage >= 100 and not self._reached_running:
                     self._reached_running = True
+                    self._refresh_ports()
                     self._set_title("Protected")
                     self._set_description(
                         "A secure line has been established"
